@@ -45,19 +45,19 @@ set(
 
 set(
   PLUGIN
-  irados
+  irods_rados_plugin
   )
 
   add_library(
       ${PLUGIN}
       MODULE
-      irados/libirados.cpp
+      librados.cpp
       )
 
   target_include_directories(
       ${PLUGIN}
       PRIVATE
-      irados
+      rados
       ${IRODS_INCLUDE_DIRS}
       ${IRODS_EXTERNALS_FULLPATH_BOOST}/include
       ${IRODS_EXTERNALS_FULLPATH_JANSSON}/include

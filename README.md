@@ -6,7 +6,7 @@ First presentation at iRODS user group meeting 2014 / Boston, MA - http://www.sl
 
 ## TL;DR
 
-- `iadmin mkresc radosResc irados rs-host:/path "cluster_name|pool_name|client_name"`
+- `iadmin mkresc radosResc rados rs-host:/path "cluster_name|pool_name|client_name"`
 - No superfluous cache/archive tier
 - Parallel, direct, high performance access to your data!
 - Multiple rados pools from one resource server
@@ -15,7 +15,7 @@ First presentation at iRODS user group meeting 2014 / Boston, MA - http://www.sl
 
 This iRODS plugin implements a direct access to Ceph/rados in the most efficient manner.
 Files in the iRODS namespace are mapped to objects in the rados key-blob store.
-In contrast to other plugins, the irados resource plugin does not need to cache or stage files, but gives you direct and parallel access to data.
+In contrast to other plugins, the rados resource plugin does not need to cache or stage files, but gives you direct and parallel access to data.
 Internally, the plugin maps the POSIX like open, read, write, seek, unlink, stat, and close calls to the librados client's operations.
 To fully use the inherent rados cluster parallelity, irods files are split to multiple 4 MB files and uploads of large files open multiple parallel transfer threads.
 
@@ -80,7 +80,7 @@ N.B: 128 is the "Placement Group", see http://docs.ceph.com/docs/mimic/rados/ope
 Copy the key from the newly created keyring and create the ceph config files on the resource server.
 You can have multiple pools with different clients & capabilities.
 
-`touch /etc/irods/irados.config && chown irods: /etc/irods/irados.config && chmod 600 /etc/irods/irados.config`
+`touch /etc/irods/rados.config && chown irods: /etc/irods/rados.config && chmod 600 /etc/irods/rados.config`
 
 ```
 [global]
@@ -97,7 +97,7 @@ The cluster_name, pool_name, and user_name to connect to a rados pool are config
 
 If no context like :/tmp/ is provided, the plugin does not work correctly. Nevertheless, the context is not used at all.
 ```
-iadmin mkresc radosResc irados rs-host:/path "cluster_name|pool_name|client_name"
+iadmin mkresc radosResc rados rs-host:/path "cluster_name|pool_name|client_name"
 ```
 
 Then upload files with:
@@ -112,8 +112,8 @@ All traffic from clients to rados is routed through the resource server. If it b
 
 ```
 iadmin mkresc radosRandomResc random
-iadmin mkresc child_01 irados rs-01.local:/path "ceph|poolname|client.irods"
-iadmin mkresc child_02 irados rs-02.local:/path "ceph|poolname|client.irods"
+iadmin mkresc child_01 rados rs-01.local:/path "ceph|poolname|client.irods"
+iadmin mkresc child_02 rados rs-02.local:/path "ceph|poolname|client.irods"
 ...
 iadmin addchildtoresc radosRandomResc child_01
 iadmin addchildtoresc radosRandomResc child_02

@@ -1,5 +1,3 @@
-// #include "libirados.hpp"
-
 // =-=-=-=-=-=-=-
 // irods includes
 #include "msParam.h"
@@ -73,15 +71,15 @@
 
 
 // switches to turn on some debugging infos and verbose log output
-//#define IRADOS_DEBUG
+//#define LIBRADOS_DEBUG
 
-#ifdef IRADOS_DEBUG
+#ifdef LIBRADOS_DEBUG
     #include <unistd.h>
 #endif
 
 
 // RADOS
-#include <rados/librados.hpp>
+#include <librados.hpp>
 
 struct rados_conn_t {
     rados_t cluster_;
@@ -96,7 +94,7 @@ boost::mutex propmap_guard_;
 
 std::map<std::string, rados_conn_t*> rados_connections_;
 
-#ifdef IRADOS_DEBUG
+#ifdef LIBRADOS_DEBUG
 // just for debugging purposes
 int num_open_fds_ = 0;
 #endif
@@ -138,8 +136,8 @@ rados_ioctx_t* get_rados_ctx(const std::string context) {
 
     // get the cluster config string from resource context:
 
-    #ifdef IRADOS_DEBUG
-        rodsLog(LOG_NOTICE, "IRADOS_DEBUG CTX INIT -> %s", context.c_str());
+    #ifdef LIBRADOS_DEBUG
+        rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG CTX INIT -> %s", context.c_str());
     #endif
 
     rados_guard_.lock();
@@ -158,7 +156,7 @@ rados_ioctx_t* get_rados_ctx(const std::string context) {
     std::string cluster_name = "ceph";
     std::string pool_name = "irods";
     std::string user_name = "client.irods";
-    std::string config_file_path = "/etc/irods/irados.config";
+    std::string config_file_path = "/etc/irods/rados.config";
 
     if (context.length() > 0) {
         int left = context.find("|");
@@ -167,8 +165,8 @@ rados_ioctx_t* get_rados_ctx(const std::string context) {
         cluster_name = context.substr(0, left);
         pool_name = context.substr(left + 1, (right - left - 1) );
         user_name = context.substr(right + 1, context.size());
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s parsed resource context as: cluster_name: %s, pool_name: %s, user_name: %s",
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s parsed resource context as: cluster_name: %s, pool_name: %s, user_name: %s",
              __func__,
              cluster_name.c_str(),
              pool_name.c_str(),
@@ -186,8 +184,8 @@ rados_ioctx_t* get_rados_ctx(const std::string context) {
             rodsLog(LOG_ERROR, "Couldn't initialize the cluster handle! error %d", ret);
             return NULL;
         } else {
-            #ifdef IRADOS_DEBUG
-                rodsLog( LOG_NOTICE, "IRADOS_DEBUG %s Created a new cluster handle", __func__);
+            #ifdef LIBRADOS_DEBUG
+                rodsLog( LOG_NOTICE, "LIBRADOS_DEBUG %s Created a new cluster handle", __func__);
             #endif
         }
     }
@@ -208,8 +206,8 @@ rados_ioctx_t* get_rados_ctx(const std::string context) {
             rodsLog(LOG_ERROR, "Couldn't connect to the cluster! error %d", ret);
             return NULL;
         } else {
-            #ifdef IRADOS_DEBUG
-            rodsLog( LOG_NOTICE, "IRADOS_DEBUG %s Connected to the cluster.", __func__);
+            #ifdef LIBRADOS_DEBUG
+            rodsLog( LOG_NOTICE, "LIBRADOS_DEBUG %s Connected to the cluster.", __func__);
             #endif
         }
     }
@@ -218,7 +216,7 @@ rados_ioctx_t* get_rados_ctx(const std::string context) {
 
     if (ret < 0) {
         rados_guard_.unlock();
-        rodsLog(LOG_ERROR, "irados: cannot setup ioctx for cluster: error %d", ret);
+        rodsLog(LOG_ERROR, "rados: cannot setup ioctx for cluster: error %d", ret);
         return NULL;
     }
 
@@ -240,12 +238,12 @@ int get_next_fd() {
 
     /// =-=-=-=-=-=-=-
     /// @brief interface to notify of a file registration
-    irods::error irados_registered_plugin(
+    irods::error rados_registered_plugin(
         irods::plugin_context& _ctx ) {
         irods::error result = SUCCESS();
 
-        #ifdef IRADOS_DEBUG
-            rodsLog( LOG_NOTICE, "IRADOS_DEBUG %s enter", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog( LOG_NOTICE, "LIBRADOS_DEBUG %s enter", __func__);
         #endif
 
         return result;
@@ -253,7 +251,7 @@ int get_next_fd() {
 
     /// =-=-=-=-=-=-=-
     /// @brief interface to notify of a file unregistration
-    irods::error irados_unregistered_plugin(
+    irods::error rados_unregistered_plugin(
         irods::plugin_context& _ctx ) {
         irods::error result = SUCCESS();
 
@@ -262,12 +260,12 @@ int get_next_fd() {
 
     /// =-=-=-=-=-=-=-
     /// @brief interface to notify of a file modification
-    irods::error irados_modified_plugin(
+    irods::error rados_modified_plugin(
         irods::plugin_context& _ctx ) {
         irods::error result = SUCCESS();
 
-        #ifdef IRADOS_DEBUG
-            rodsLog( LOG_NOTICE, "IRADOS_DEBUG %s enter", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog( LOG_NOTICE, "LIBRADOS_DEBUG %s enter", __func__);
         #endif
 
         return result;
@@ -275,13 +273,13 @@ int get_next_fd() {
 
     /// =-=-=-=-=-=-=-
     /// @brief interface to notify of a file operation
-    irods::error irados_notify_plugin(
+    irods::error rados_notify_plugin(
         irods::plugin_context& _ctx,
         const std::string* _opr ) {
         irods::error result = SUCCESS();
 
-        #ifdef IRADOS_DEBUG
-            rodsLog( LOG_NOTICE, "IRADOS_DEBUG %s enter", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog( LOG_NOTICE, "LIBRADOS_DEBUG %s enter", __func__);
         #endif
 
         return result;
@@ -290,12 +288,12 @@ int get_next_fd() {
 
     // =-=-=-=-=-=-=-
     // interface to determine free space on a device given a path
-    irods::error irados_get_fsfreespace_plugin(
+    irods::error rados_get_fsfreespace_plugin(
         irods::plugin_context& _ctx ) {
         irods::error result = SUCCESS();
 
-#ifdef IRADOS_DEBUG
-    rodsLog( LOG_NOTICE, "IRADOS_DEBUG %s called", __func__);
+#ifdef LIBRADOS_DEBUG
+    rodsLog( LOG_NOTICE, "LIBRADOS_DEBUG %s called", __func__);
 #endif
 
 
@@ -324,27 +322,27 @@ int get_next_fd() {
     rodsLong_t fssize = 999999999999999;
     result.code( fssize );
 
-    #ifdef IRADOS_DEBUG
-        rodsLog( LOG_NOTICE, "IRADOS_DEBUG %s leave", __func__);
+    #ifdef LIBRADOS_DEBUG
+        rodsLog( LOG_NOTICE, "LIBRADOS_DEBUG %s leave", __func__);
     #endif
         return result;
 
-    } // irados_get_fsfreespace_plugin
+    } // rados_get_fsfreespace_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX create
-    irods::error irados_create_plugin(
+    irods::error rados_create_plugin(
         irods::plugin_context& _ctx ) {
 
-#ifdef IRADOS_DEBUG
-        rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s enter", __func__);
+#ifdef LIBRADOS_DEBUG
+        rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s enter", __func__);
         // irods::stacktrace st;
         // st.trace();
         // st.dump();
 #endif
         irods::error result = SUCCESS();
 
-        // create the irados internal id for this data object
+        // create the rados internal id for this data object
         std::string oid = rand_uuid_string();
 
 
@@ -354,7 +352,7 @@ int get_next_fd() {
         _ctx.prop_map().get<std::string>(irods::RESOURCE_CONTEXT, context);
 
         fop->physical_path(oid);
-        // irods::error ret = irados_get_fsfreespace_plugin( _ctx );
+        // irods::error ret = rados_get_fsfreespace_plugin( _ctx );
         // if ( ( result = ASSERT_PASS( ret, "Error determining freespace on system." ) ).ok() ) {
         //     rodsLong_t file_size = fop->size();
         //     if ( ( result = ASSERT_ERROR( file_size < 0 || ret.code() >= file_size, USER_FILE_TOO_LARGE, "File size: %ld is greater than space left on device: %ld", file_size, ret.code() ) ).ok() ) {
@@ -368,7 +366,7 @@ int get_next_fd() {
 
         const auto* io_ctx_ptr = get_rados_ctx(context);
         if (io_ctx_ptr == NULL) {
-            rodsLog(LOG_ERROR, "IRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
+            rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
             result.code(PLUGIN_ERROR);
             return result;
         }
@@ -391,11 +389,11 @@ int get_next_fd() {
 
         propmap_guard_.unlock();
 
-        #ifdef IRADOS_DEBUG
+        #ifdef LIBRADOS_DEBUG
             int flags = fop->flags();
             num_open_fds_++;
 
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s created: %s with flags: %d - (fd: %d) open fds: %d, context: %s",
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s created: %s with flags: %d - (fd: %d) open fds: %d, context: %s",
             __func__,
             oid.c_str(),
             flags,
@@ -405,11 +403,11 @@ int get_next_fd() {
         #endif
 
         return result;
-    } // irados_create_plugin
+    } // rados_create_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX Open
-    irods::error irados_open_plugin(
+    irods::error rados_open_plugin(
         irods::plugin_context& _ctx ) {
         irods::error result = SUCCESS();
 
@@ -423,8 +421,8 @@ int get_next_fd() {
         _ctx.prop_map().get<std::string>(irods::RESOURCE_CONTEXT, context);
 
 
-#ifdef IRADOS_DEBUG
-        rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s called on oid: %s for path: %s with flags: %d, context: %s",
+#ifdef LIBRADOS_DEBUG
+        rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s called on oid: %s for path: %s with flags: %d, context: %s",
             __func__,
             oid.c_str(),
             fop->physical_path().c_str(),
@@ -435,7 +433,7 @@ int get_next_fd() {
 
         const auto* io_ctx_ptr = get_rados_ctx(context);
         if (io_ctx_ptr == NULL) {
-            rodsLog(LOG_ERROR, "IRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
+            rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
             result.code(PLUGIN_ERROR);
             return result;
         }
@@ -449,10 +447,10 @@ int get_next_fd() {
         fd_offsets_[fd] = 0;
         fd_contexts_[fd] = io_ctx;
 
-        #ifdef IRADOS_DEBUG
+        #ifdef LIBRADOS_DEBUG
             num_open_fds_++;
             std::string lid = fop->logical_path();
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s opened: oid: %s logical: %s - (fd: %d) open fds: %d | on file %d",
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s opened: oid: %s logical: %s - (fd: %d) open fds: %d | on file %d",
                 __func__,
                 oid.c_str(),
                 lid.c_str(),
@@ -465,25 +463,25 @@ int get_next_fd() {
 
 
         if (flags & O_RDONLY) {
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG open FLAGS path: %s has O_RDONLY", fop->physical_path().c_str());
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG open FLAGS path: %s has O_RDONLY", fop->physical_path().c_str());
         }
         if (flags & O_WRONLY) {
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG open FLAGS path: %s has O_WRONLY", fop->physical_path().c_str());
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG open FLAGS path: %s has O_WRONLY", fop->physical_path().c_str());
         }
         if (flags & O_RDWR) {
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG open FLAGS path: %s has O_RDWR", fop->physical_path().c_str());
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG open FLAGS path: %s has O_RDWR", fop->physical_path().c_str());
         }
         if (flags & O_TRUNC) {
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG open FLAGS path: %s has O_TRUNC", fop->physical_path().c_str());
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG open FLAGS path: %s has O_TRUNC", fop->physical_path().c_str());
         }
         if (flags & O_APPEND) {
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG open FLAGS path: %s has O_APPEND", fop->physical_path().c_str());
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG open FLAGS path: %s has O_APPEND", fop->physical_path().c_str());
         }
         if (flags & O_CREAT) {
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG open FLAGS path: %s has O_CREAT", fop->physical_path().c_str());
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG open FLAGS path: %s has O_CREAT", fop->physical_path().c_str());
         }
         if (flags & O_LARGEFILE) {
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG open FLAGS path: %s has O_LARGEFILE", fop->physical_path().c_str());
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG open FLAGS path: %s has O_LARGEFILE", fop->physical_path().c_str());
         }
 
 
@@ -495,7 +493,7 @@ int get_next_fd() {
             int r = rados_getxattr(io_ctx, oid.c_str(), "NUM_BLOBS", num_blobs_str, sizeof(num_blobs_str));
 
             if (r < 0) {
-                rodsLog(LOG_ERROR, "IRADOS_DEBUG %s -> oid: %s rados_getxattr returned: %d", __func__, oid.c_str(), r);
+                rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s -> oid: %s rados_getxattr returned: %d", __func__, oid.c_str(), r);
                 result.code(UNIX_FILE_STAT_ERR);
                 return result;
             }
@@ -515,7 +513,7 @@ int get_next_fd() {
 
                 status = rados_remove(io_ctx, blob_oid.str().c_str());
                 if (status != 0) {
-                    rodsLog(LOG_ERROR, "IRADOS_DEBUG %s -> oid: %s remove(%s) returned: %d",
+                    rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s -> oid: %s remove(%s) returned: %d",
                      __func__,
                      oid.c_str(),
                      blob_oid.str().c_str(),
@@ -539,7 +537,7 @@ int get_next_fd() {
         //     int r = rados_getxattr(io_ctx, oid.c_str(), "FILE_SIZE", xfilesize, sizeof(xfilesize));
 
         //     if (r < 0) {
-        //         rodsLog(LOG_ERROR, "IRADOS_DEBUG %s (%s) -> oid: %s rados_getxattr(FILE_SIZE) returned: %d",
+        //         rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s (%s) -> oid: %s rados_getxattr(FILE_SIZE) returned: %d",
         //             __func__,
         //             pool_name_.c_str(),
         //             oid.c_str(),
@@ -556,11 +554,11 @@ int get_next_fd() {
 
         return result;
 
-    } // irados_open_plugin
+    } // rados_open_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX Read
-    irods::error irados_read_plugin(
+    irods::error rados_read_plugin(
         irods::plugin_context& _ctx,
         void* _buf,
         int _len) {
@@ -596,8 +594,8 @@ int get_next_fd() {
         // }
 
 
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s ReadRequest: from %s off: %lu, len: %d - (fd: %d)",
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s ReadRequest: from %s off: %lu, len: %d - (fd: %d)",
                 __func__,
                 oid.c_str(),
                 read_ptr,
@@ -642,8 +640,8 @@ int get_next_fd() {
 
             bytes_read += status;
 
-#ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s ReadPart: from %s blob_id: %d, blob_offset: %lu, read: %lu, rados_read status: %d, (fd: %d)",
+#ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s ReadPart: from %s blob_id: %d, blob_offset: %lu, read: %lu, rados_read status: %d, (fd: %d)",
                     __func__,
                     blob_oid.str().c_str(),
                     blob_id,
@@ -663,11 +661,11 @@ int get_next_fd() {
         propmap_guard_.unlock();
 
         return result;
-    } // irados_read_plugin
+    } // rados_read_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX Write
-    irods::error irados_write_plugin(
+    irods::error rados_write_plugin(
         irods::plugin_context& _ctx,
         void* _buf,
         int _len) {
@@ -716,8 +714,8 @@ int get_next_fd() {
                 result.code(PLUGIN_ERROR);
                 return result;
             }
-            #ifdef IRADOS_DEBUG
-                rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s to %s blob_id: %d, blob_offset: %lu, write_len: %lu, rados_write_status: %d, (fd: %d)",
+            #ifdef LIBRADOS_DEBUG
+                rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s to %s blob_id: %d, blob_offset: %lu, write_len: %lu, rados_write_status: %d, (fd: %d)",
                     __func__,
                     blob_oid.c_str(),
                     blob_id,
@@ -757,14 +755,14 @@ int get_next_fd() {
         propmap_guard_.unlock();
         result.code( _len );
         return result;
-    } // irados_write_plugin
+    } // rados_write_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX Close
-    irods::error irados_close_plugin(
+    irods::error rados_close_plugin(
         irods::plugin_context& _ctx ) {
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s", __func__);
         #endif
         irods::error result = SUCCESS();
         irods::file_object_ptr fop = boost::dynamic_pointer_cast< irods::file_object>(_ctx.fco());
@@ -791,8 +789,8 @@ int get_next_fd() {
             if (not dirty) {
                 propmap_guard_.unlock();
             } else {
-                #ifdef IRADOS_DEBUG
-                    rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s - %s - fd_cnt: %d Writing metadata for dirty oid",
+                #ifdef LIBRADOS_DEBUG
+                    rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s - %s - fd_cnt: %d Writing metadata for dirty oid",
                         __func__,
                         oid.c_str(),
                         fd_cnt);
@@ -810,7 +808,7 @@ int get_next_fd() {
 
                 int r = rados_setxattr(io_ctx, oid.c_str(), "FILE_SIZE", xfilesize.str().c_str(), xfilesize.str().size());
                 if (r > 0) {
-                    rodsLog(LOG_ERROR, "IRADOS_DEBUG %s - %s - error during rados_setxattr()", __func__, oid.c_str());
+                    rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s - %s - error during rados_setxattr()", __func__, oid.c_str());
                     result.code(PLUGIN_ERROR);
                 }
 
@@ -819,7 +817,7 @@ int get_next_fd() {
 
                 r = rados_setxattr(io_ctx, oid.c_str(), "NUM_BLOBS", xnumblobs.str().c_str(), xnumblobs.str().size());
                 if (r > 0) {
-                    rodsLog(LOG_ERROR, "IRADOS_DEBUG %s - %s - error during rados_setxattr()", __func__, oid.c_str());
+                    rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s - %s - error during rados_setxattr()", __func__, oid.c_str());
                     result.code(PLUGIN_ERROR);
                 }
 
@@ -828,12 +826,12 @@ int get_next_fd() {
 
                 r = rados_setxattr(io_ctx, oid.c_str(), "BLOB_SIZE", xblobsize.str().c_str(), xblobsize.str().size());
                 if (r > 0) {
-                    rodsLog(LOG_ERROR, "IRADOS_DEBUG %s - %s - error during rados_setxattr()", __func__, oid.c_str());
+                    rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s - %s - error during rados_setxattr()", __func__, oid.c_str());
                     result.code(PLUGIN_ERROR);
                 }
 
-                #ifdef IRADOS_DEBUG
-                     rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s %s - closed blob: highest blob-id: %lu, size: %lu (fd: %d)",
+                #ifdef LIBRADOS_DEBUG
+                     rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s %s - closed blob: highest blob-id: %lu, size: %lu (fd: %d)",
                     __func__,
                     oid.c_str(),
                     num_blobs,
@@ -845,11 +843,11 @@ int get_next_fd() {
         }
 
         return result;
-    } // irados_close_plugin
+    } // rados_close_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX Unlink
-    irods::error irados_unlink_plugin(
+    irods::error rados_unlink_plugin(
         irods::plugin_context& _ctx ) {
 
         irods::error result = SUCCESS();
@@ -861,8 +859,8 @@ int get_next_fd() {
         _ctx.prop_map().get<std::string>(irods::RESOURCE_CONTEXT, context);
 
 
-#ifdef IRADOS_DEBUG
-        rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s called on oid: %s with path: %s",
+#ifdef LIBRADOS_DEBUG
+        rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s called on oid: %s with path: %s",
          __func__,
          oid.c_str(),
          fop->physical_path().c_str());
@@ -870,7 +868,7 @@ int get_next_fd() {
 
         const auto* io_ctx_ptr = get_rados_ctx(context);
         if (io_ctx_ptr == NULL) {
-            rodsLog(LOG_ERROR, "IRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
+            rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
             result.code(PLUGIN_ERROR);
             return result;
         }
@@ -881,7 +879,7 @@ int get_next_fd() {
         int r = rados_getxattr(io_ctx, oid.c_str(), "NUM_BLOBS", num_blobs_str, sizeof(num_blobs_str));
 
         if (r < 0) {
-            rodsLog(LOG_ERROR, "IRADOS_DEBUG %s -> oid: %s rados_getxattr returned: %d", __func__, oid.c_str(), r);
+            rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s -> oid: %s rados_getxattr returned: %d", __func__, oid.c_str(), r);
             result.code(PLUGIN_ERROR);
             return result;
         }
@@ -901,25 +899,25 @@ int get_next_fd() {
 
             status = rados_remove(io_ctx, blob_oid.str().c_str());
             if (status != 0) {
-                rodsLog(LOG_ERROR, "IRADOS_DEBUG %s -> oid: %s rados_remove(%s) returned: %d", __func__, oid.c_str(), blob_oid.str().c_str(), status);
+                rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s -> oid: %s rados_remove(%s) returned: %d", __func__, oid.c_str(), blob_oid.str().c_str(), status);
             }
             result.code( status );
         }
 
-        #ifdef IRADOS_DEBUG
+        #ifdef LIBRADOS_DEBUG
 
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s %s removed %d blobs",
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s %s removed %d blobs",
                 __func__,
                 oid.c_str(),
                 num_blobs);
         #endif
 
         return result;
-    } // irados_unlink_plugin
+    } // rados_unlink_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX Stat
-    irods::error irados_stat_plugin(
+    irods::error rados_stat_plugin(
         irods::plugin_context& _ctx,
         struct stat* _statbuf ) {
         irods::error result = SUCCESS();
@@ -930,15 +928,15 @@ int get_next_fd() {
         std::string context;
         _ctx.prop_map().get<std::string>(irods::RESOURCE_CONTEXT, context);
 
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s -> oid: %s",
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s -> oid: %s",
                 __func__,
                 oid.c_str());
         #endif
 
         const auto* io_ctx_ptr = get_rados_ctx(context);
         if (io_ctx_ptr == NULL) {
-            rodsLog(LOG_ERROR, "IRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
+            rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s - %s - no io_ctx_t available", __func__, oid.c_str());
             result.code(PLUGIN_ERROR);
             return result;
         }
@@ -954,7 +952,7 @@ int get_next_fd() {
         int r = rados_getxattr(io_ctx, oid.c_str(), "FILE_SIZE", xfilesize, sizeof(xfilesize));
 
         if (r < 0) {
-            rodsLog(LOG_ERROR, "IRADOS_DEBUG %s -> oid: %s rados_getxattr(FILE_SIZE) returned: %d",
+            rodsLog(LOG_ERROR, "LIBRADOS_DEBUG %s -> oid: %s rados_getxattr(FILE_SIZE) returned: %d",
                 __func__,
                 oid.c_str(),
                 r);
@@ -968,8 +966,8 @@ int get_next_fd() {
         _statbuf->st_size = file_size;
         _statbuf->st_mode = 0 | S_IRWXU | S_IRWXG;
 
-         #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s -> status: %d, oid: %s stat got pmtime: %lu, size:%lu",
+         #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s -> status: %d, oid: %s stat got pmtime: %lu, size:%lu",
                 __func__,
                 status,
                 oid.c_str(),
@@ -981,11 +979,11 @@ int get_next_fd() {
 
 
         return result;
-    } // irados_stat_plugin
+    } // rados_stat_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX lseek
-    irods::error irados_lseek_plugin(
+    irods::error rados_lseek_plugin(
         irods::plugin_context& _ctx,
         long long                           _offset,
         int                                 _whence ) { // always is SEEK_SET == 0
@@ -1000,8 +998,8 @@ int get_next_fd() {
 
         result.code(_offset);
 
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s offset: %lu, whence: %d - (fd: %d)",
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s offset: %lu, whence: %d - (fd: %d)",
             __func__,
             _offset,
             _whence,
@@ -1009,90 +1007,90 @@ int get_next_fd() {
         #endif
 
         return result;
-    } // irados_lseek_plugin
+    } // rados_lseek_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX mkdir
-    irods::error irados_mkdir_plugin(
+    irods::error rados_mkdir_plugin(
         irods::plugin_context& _ctx ) {
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s", __func__);
         #endif
 
         // we do not know any directory.
         return SUCCESS();
-    } // irados_mkdir_plugin
+    } // rados_mkdir_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX rmdir
-    irods::error irados_rmdir_plugin(
+    irods::error rados_rmdir_plugin(
         irods::plugin_context& _ctx ) {
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s", __func__);
         #endif
         // we do not know any directory.
         return SUCCESS();
-    } // irados_rmdir_plugin
+    } // rados_rmdir_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX opendir
-    irods::error irados_opendir_plugin(
+    irods::error rados_opendir_plugin(
         irods::plugin_context& _ctx ) {
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s - not supported", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s - not supported", __func__);
         #endif
-         return ERROR( SYS_NOT_SUPPORTED, "irados_opendir_plugin" );
-    } // irados_opendir_plugin
+         return ERROR( SYS_NOT_SUPPORTED, "rados_opendir_plugin" );
+    } // rados_opendir_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX closedir
-    irods::error irados_closedir_plugin(
+    irods::error rados_closedir_plugin(
         irods::plugin_context& _ctx ) {
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s - not supported", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s - not supported", __func__);
         #endif
-        return ERROR(SYS_NOT_SUPPORTED, "irados_closedir_plugin" );
-    } // irados_closedir_plugin
+        return ERROR(SYS_NOT_SUPPORTED, "rados_closedir_plugin" );
+    } // rados_closedir_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX readdir
-    irods::error irados_readdir_plugin(
+    irods::error rados_readdir_plugin(
         irods::plugin_context& _ctx,
         struct rodsDirent** _dirent_ptr ) {
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s - not supported", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s - not supported", __func__);
         #endif
-        return ERROR( SYS_NOT_SUPPORTED, "irados_readdir_plugin" );
-    } // irados_readdir_plugin
+        return ERROR( SYS_NOT_SUPPORTED, "rados_readdir_plugin" );
+    } // rados_readdir_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX readdir
-    irods::error irados_rename_plugin(
+    irods::error rados_rename_plugin(
         irods::plugin_context& _ctx,
         const char* _new_file_name ) {
 
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s", __func__);
         #endif
 
         // rename in rados is a: get old_oid, put old_oid new_oid, rm old_oid
         // we have a fixed physical path and do not reflect changes to the physical path.
         return SUCCESS();
-    } // irados_rename_plugin
+    } // rados_rename_plugin
 
     // =-=-=-=-=-=-=-
     // interface for POSIX truncate
-    irods::error irados_truncate_plugin(
+    irods::error rados_truncate_plugin(
         irods::plugin_context& _ctx ) {
-        #ifdef IRADOS_DEBUG
-            rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s - not supported", __func__);
+        #ifdef LIBRADOS_DEBUG
+            rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s - not supported", __func__);
         #endif
-        return ERROR(SYS_NOT_SUPPORTED, "irados_truncate_plugin" );
-    } // irados_truncate_plugin
+        return ERROR(SYS_NOT_SUPPORTED, "rados_truncate_plugin" );
+    } // rados_truncate_plugin
 
     // =-=-=-=-=-=-=-
     // redirect_create - code to determine redirection for create operation
-    irods::error irados_redirect_create(
+    irods::error rados_redirect_create(
         irods::plugin_property_map&   _prop_map,
         irods::file_object_ptr        _file_obj,
         const std::string&             _resc_name,
@@ -1132,16 +1130,16 @@ int get_next_fd() {
                 }
             }
         }
-#ifdef IRADOS_DEBUG
-    rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s leave", __func__);
+#ifdef LIBRADOS_DEBUG
+    rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s leave", __func__);
 #endif
         return result;
 
-    } // irados_redirect_create
+    } // rados_redirect_create
 
 //     =-=-=-=-=-=-=-
 //     redirect_open - code to determine redirection for open operation
-    irods::error irados_redirect_open(
+    irods::error rados_redirect_open(
         irods::plugin_property_map&   _prop_map,
         irods::file_object_ptr        _file_obj,
         const std::string&             _resc_name,
@@ -1251,18 +1249,18 @@ int get_next_fd() {
                 result = PASS( result );
             }
         }
-#ifdef IRADOS_DEBUG
-    rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s leave", __func__);
+#ifdef LIBRADOS_DEBUG
+    rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s leave", __func__);
 #endif
         return result;
 
-    } // irados_redirect_open
+    } // rados_redirect_open
 
 
      // =-=-=-=-=-=-=-
      // used to allow the resource to determine which host
      // should provide the requested operation
-     irods::error irados_resolve_hierarchy_plugin(
+     irods::error rados_resolve_hierarchy_plugin(
          irods::plugin_context& _ctx,
          const std::string* _opr,
          const std::string* _curr_host,
@@ -1270,7 +1268,7 @@ int get_next_fd() {
          float* _out_vote ) {
          irods::error result = SUCCESS();
 
-         rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s called %s -> %s", __func__, _opr->c_str(), _curr_host->c_str());
+         rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s called %s -> %s", __func__, _opr->c_str(), _curr_host->c_str());
 
 
          // =-=-=-=-=-=-=-
@@ -1301,14 +1299,14 @@ int get_next_fd() {
                          irods::UNLINK_OPERATION == ( *_opr ) ) {
                          // =-=-=-=-=-=-=-
                          // call redirect determination for 'get' operation
-                         ret = irados_redirect_open( _ctx.prop_map(), file_obj, resc_name, ( *_curr_host ), ( *_out_vote ) );
+                         ret = rados_redirect_open( _ctx.prop_map(), file_obj, resc_name, ( *_curr_host ), ( *_out_vote ) );
                          result = ASSERT_PASS( ret, "Failed redirecting for open." );
 
                      }
                      else if ( irods::CREATE_OPERATION == ( *_opr ) ) {
                          // =-=-=-=-=-=-=-
                          // call redirect determination for 'create' operation
-                         ret = irados_redirect_create( _ctx.prop_map(), file_obj, resc_name, ( *_curr_host ), ( *_out_vote ) );
+                         ret = rados_redirect_create( _ctx.prop_map(), file_obj, resc_name, ( *_curr_host ), ( *_out_vote ) );
                          result = ASSERT_PASS( ret, "Failed redirecting for create." );
                      }
 
@@ -1327,7 +1325,7 @@ int get_next_fd() {
 
      // =-=-=-=-=-=-=-
      // example_file_rebalance - code which would rebalance the subtree
-     irods::error irados_rebalance(
+     irods::error rados_rebalance(
          irods::plugin_context& _ctx ) {
          return SUCCESS();
 
@@ -1335,17 +1333,17 @@ int get_next_fd() {
 
 
 
-    class irados_resource : public irods::resource {
+    class rados_resource : public irods::resource {
 
     public:
-        irados_resource(
+        rados_resource(
             const std::string& _inst_name,
             const std::string& _context ) :
             irods::resource(
                 _inst_name,
                 _context ) {
-#ifdef IRADOS_DEBUG
-    rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s CTOR (%s, %s)", __func__, _inst_name.c_str(), _context.c_str());
+#ifdef LIBRADOS_DEBUG
+    rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s CTOR (%s, %s)", __func__, _inst_name.c_str(), _context.c_str());
 #endif
         } // ctor
 
@@ -1356,12 +1354,12 @@ int get_next_fd() {
         irods::error post_disconnect_maintenance_operation( irods::pdmo_type& _op ) {
             irods::error result = SUCCESS();
 
-            #ifdef IRADOS_DEBUG
-                rodsLog(LOG_NOTICE, "IRADOS_DEBUG %s POST DISCONNECT HOOK", __func__);
+            #ifdef LIBRADOS_DEBUG
+                rodsLog(LOG_NOTICE, "LIBRADOS_DEBUG %s POST DISCONNECT HOOK", __func__);
             #endif
             return result;
         }
-    }; // class irados_resource
+    }; // class rados_resource
 
     // =-=-=-=-=-=-=-
     // 4. create the plugin factory function which will return a dynamically
@@ -1375,37 +1373,37 @@ irods::resource* plugin_factory(const std::string& _inst_name,
         const std::string& _context) {
 
     // =-=-=-=-=-=-=-
-    // 4a. create irados_resource
-    irados_resource* resc = new irados_resource(_inst_name, _context);
+    // 4a. create rados_resource
+    rados_resource* resc = new rados_resource(_inst_name, _context);
 
     // =-=-=-=-=-=-=-
     // 4b. map function names to operations.  this map will be used to load
     //     the symbols from the shared object in the delay_load stage of
     //     plugin loading.
-    resc->add_operation(irods::RESOURCE_OP_CREATE, &irados_create_plugin);
-    resc->add_operation(irods::RESOURCE_OP_OPEN, &irados_open_plugin);
-    resc->add_operation<void*,int>(irods::RESOURCE_OP_READ, std::function<irods::error(irods::plugin_context&,void*,int)>(irados_read_plugin));
-    resc->add_operation<void*,int>(irods::RESOURCE_OP_WRITE, std::function<irods::error(irods::plugin_context&,void*,int)>(irados_write_plugin));
-    resc->add_operation(irods::RESOURCE_OP_CLOSE, &irados_close_plugin);
-    resc->add_operation(irods::RESOURCE_OP_UNLINK, &irados_unlink_plugin);
-    resc->add_operation<struct stat*>(irods::RESOURCE_OP_STAT, std::function<irods::error(irods::plugin_context&, struct stat*)>(irados_stat_plugin));
-    resc->add_operation<long long,int>(irods::RESOURCE_OP_LSEEK, std::function<irods::error(irods::plugin_context&, long long, int)>(irados_lseek_plugin));
-    resc->add_operation(irods::RESOURCE_OP_MKDIR, &irados_mkdir_plugin);
-    resc->add_operation(irods::RESOURCE_OP_RMDIR, &irados_rmdir_plugin);
-    resc->add_operation(irods::RESOURCE_OP_OPENDIR, &irados_opendir_plugin);
-    resc->add_operation(irods::RESOURCE_OP_CLOSEDIR, &irados_closedir_plugin);
-    resc->add_operation<struct rodsDirent**>(irods::RESOURCE_OP_READDIR, std::function<irods::error(irods::plugin_context&,struct rodsDirent**)>(irados_readdir_plugin));
-    resc->add_operation<const char*>(irods::RESOURCE_OP_RENAME, std::function<irods::error(irods::plugin_context&, const char*)>(irados_rename_plugin));
-    resc->add_operation(irods::RESOURCE_OP_TRUNCATE, &irados_truncate_plugin);
-    resc->add_operation(irods::RESOURCE_OP_FREESPACE, &irados_get_fsfreespace_plugin);
+    resc->add_operation(irods::RESOURCE_OP_CREATE, &rados_create_plugin);
+    resc->add_operation(irods::RESOURCE_OP_OPEN, &rados_open_plugin);
+    resc->add_operation<void*,int>(irods::RESOURCE_OP_READ, std::function<irods::error(irods::plugin_context&,void*,int)>(rados_read_plugin));
+    resc->add_operation<void*,int>(irods::RESOURCE_OP_WRITE, std::function<irods::error(irods::plugin_context&,void*,int)>(rados_write_plugin));
+    resc->add_operation(irods::RESOURCE_OP_CLOSE, &rados_close_plugin);
+    resc->add_operation(irods::RESOURCE_OP_UNLINK, &rados_unlink_plugin);
+    resc->add_operation<struct stat*>(irods::RESOURCE_OP_STAT, std::function<irods::error(irods::plugin_context&, struct stat*)>(rados_stat_plugin));
+    resc->add_operation<long long,int>(irods::RESOURCE_OP_LSEEK, std::function<irods::error(irods::plugin_context&, long long, int)>(rados_lseek_plugin));
+    resc->add_operation(irods::RESOURCE_OP_MKDIR, &rados_mkdir_plugin);
+    resc->add_operation(irods::RESOURCE_OP_RMDIR, &rados_rmdir_plugin);
+    resc->add_operation(irods::RESOURCE_OP_OPENDIR, &rados_opendir_plugin);
+    resc->add_operation(irods::RESOURCE_OP_CLOSEDIR, &rados_closedir_plugin);
+    resc->add_operation<struct rodsDirent**>(irods::RESOURCE_OP_READDIR, std::function<irods::error(irods::plugin_context&,struct rodsDirent**)>(rados_readdir_plugin));
+    resc->add_operation<const char*>(irods::RESOURCE_OP_RENAME, std::function<irods::error(irods::plugin_context&, const char*)>(rados_rename_plugin));
+    resc->add_operation(irods::RESOURCE_OP_TRUNCATE, &rados_truncate_plugin);
+    resc->add_operation(irods::RESOURCE_OP_FREESPACE, &rados_get_fsfreespace_plugin);
 
-    resc->add_operation( irods::RESOURCE_OP_REGISTERED,   &irados_registered_plugin );
-    resc->add_operation( irods::RESOURCE_OP_UNREGISTERED, &irados_unregistered_plugin );
-    resc->add_operation( irods::RESOURCE_OP_MODIFIED,     &irados_modified_plugin );
-    resc->add_operation<const std::string*>( irods::RESOURCE_OP_NOTIFY, std::function<irods::error(irods::plugin_context&, const std::string*)>(irados_notify_plugin) );
+    resc->add_operation( irods::RESOURCE_OP_REGISTERED,   &rados_registered_plugin );
+    resc->add_operation( irods::RESOURCE_OP_UNREGISTERED, &rados_unregistered_plugin );
+    resc->add_operation( irods::RESOURCE_OP_MODIFIED,     &rados_modified_plugin );
+    resc->add_operation<const std::string*>( irods::RESOURCE_OP_NOTIFY, std::function<irods::error(irods::plugin_context&, const std::string*)>(rados_notify_plugin) );
 
-    resc->add_operation<const std::string*,const std::string*,irods::hierarchy_parser*,float*>(irods::RESOURCE_OP_RESOLVE_RESC_HIER, std::function<irods::error(irods::plugin_context&, const std::string*, const std::string*, irods::hierarchy_parser*, float*)>(irados_resolve_hierarchy_plugin));
-    resc->add_operation(irods::RESOURCE_OP_REBALANCE, &irados_rebalance);
+    resc->add_operation<const std::string*,const std::string*,irods::hierarchy_parser*,float*>(irods::RESOURCE_OP_RESOLVE_RESC_HIER, std::function<irods::error(irods::plugin_context&, const std::string*, const std::string*, irods::hierarchy_parser*, float*)>(rados_resolve_hierarchy_plugin));
+    resc->add_operation(irods::RESOURCE_OP_REBALANCE, &rados_rebalance);
 
     // =-=-=-=-=-=-=-
     // set some properties necessary for backporting to iRODS legacy code
