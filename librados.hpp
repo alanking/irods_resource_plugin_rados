@@ -1,5 +1,7 @@
 #ifndef _LIBRADOS_H_
 
+#include <rados/librados.hpp>
+
 struct rados_conn_t {
     librados::Rados* cluster_;
     librados::IoCtx* io_ctx_;

@@ -57,7 +57,6 @@ set(
   target_include_directories(
       ${PLUGIN}
       PRIVATE
-      rados
       ${IRODS_INCLUDE_DIRS}
       ${IRODS_EXTERNALS_FULLPATH_BOOST}/include
       ${IRODS_EXTERNALS_FULLPATH_JANSSON}/include
